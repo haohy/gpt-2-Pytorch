@@ -9,6 +9,8 @@ import math
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 
+from IPython import embed
+
 def gelu(x):
     return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
 
@@ -56,6 +58,9 @@ class Attention(nn.Module):
         self.c_proj = Conv1D(n_state, nx)
 
     def _attn(self, q, k, v):
+        # q, k, v: [batch(1), L_in(64), d_embd(768)]
+        # a, present = self.attn(self.ln_1(x), layer_past=layer_past) # a: [batch(1), L_in(64), d_embd(768)], present: [2, 1, 12, 64, 64]
+
         w = torch.matmul(q, k)
         if self.scale:
             w = w / math.sqrt(v.size(-1))
@@ -79,9 +84,12 @@ class Attention(nn.Module):
             return x.permute(0, 2, 1, 3)  # (batch, head, seq_length, head_features)
 
     def forward(self, x, layer_past=None):
-        x = self.c_attn(x)
-        query, key, value = x.split(self.split_size, dim=2)
-        query = self.split_heads(query)
+
+        embed(header="Attention")
+
+        x = self.c_attn(x)  # x: [batch, L_in, 3*d_embd], equals to 3 linear function's integer
+        query, key, value = x.split(self.split_size, dim=2) # query, key, value: [batch, L_in, d_embd]
+        query = self.split_heads(query) # query: [batch, nhead, L_in, d_embd//nhead]
         key = self.split_heads(key, k=True)
         value = self.split_heads(value)
         if layer_past is not None:
@@ -90,8 +98,9 @@ class Attention(nn.Module):
             value = torch.cat((past_value, value), dim=-2)
         present = torch.stack((key.transpose(-2, -1), value))  # transpose to have same shapes for stacking
         a = self._attn(query, key, value)
-        a = self.merge_heads(a)
+        a = self.merge_heads(a) # a: [batch(1), L_in(64), d_embd(768)]
         a = self.c_proj(a)
+        # a: [batch(1), L_in(64), d_embd(768)], present: [batch(1), L_in(64), d_embd(768)]
         return a, present
 
 class MLP(nn.Module):
@@ -117,10 +126,14 @@ class Block(nn.Module):
         self.mlp = MLP(4 * nx, config)
 
     def forward(self, x, layer_past=None):
-        a, present = self.attn(self.ln_1(x), layer_past=layer_past)
-        x = x + a
-        m = self.mlp(self.ln_2(x))
-        x = x + m
+        # x: [batch(1), L_in(64), d_embd(768)]
+        # embed(header="Block")
+
+        a, present = self.attn(self.ln_1(x), layer_past=layer_past) # a: [batch(1), L_in(64), d_embd(768)], present: [2, 1, 12, 64, 64]
+
+        x = x + a   # residual 
+        m = self.mlp(self.ln_2(x))  # feed forward
+        x = x + m   # residual
         return x, present
 
 class GPT2Model(nn.Module):
@@ -142,34 +155,37 @@ class GPT2Model(nn.Module):
         self.decoder.weight = model_embeddings_weights  # Tied weights
 
     def forward(self, input_ids, position_ids=None, token_type_ids=None, past=None):
+
+        # embed(header="GPT2Model")
+
         if past is None:
             past_length = 0
-            past = [None] * len(self.h)
+            past = [None] * len(self.h) # [1, n_layer]
         else:
             past_length = past[0][0].size(-2)
         if position_ids is None:
             position_ids = torch.arange(past_length, input_ids.size(-1) + past_length, dtype=torch.long,
                                         device=input_ids.device)
-            position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
+            position_ids = position_ids.unsqueeze(0).expand_as(input_ids)   # position_ids: [batch, L_in] same as input_ids
 
         input_shape = input_ids.size()
         input_ids = input_ids.view(-1, input_ids.size(-1))
         position_ids = position_ids.view(-1, position_ids.size(-1))
 
-        inputs_embeds = self.wte(input_ids)
-        position_embeds = self.wpe(position_ids)
+        inputs_embeds = self.wte(input_ids) # inputs_embeds: [batch, L_in, d_embd]
+        position_embeds = self.wpe(position_ids)    # position_embeds: [batch, L_in, d_embd]
         if token_type_ids is not None:
             token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
             token_type_embeds = self.wte(token_type_ids)
         else:
             token_type_embeds = 0
-        hidden_states = inputs_embeds + position_embeds + token_type_embeds
+        hidden_states = inputs_embeds + position_embeds + token_type_embeds # hidden_states: [batch, L_in, d_embd]
         presents = []
         for block, layer_past in zip(self.h, past):
             hidden_states, present = block(hidden_states, layer_past)
-            presents.append(present)
-        hidden_states = self.ln_f(hidden_states)
-        output_shape = input_shape + (hidden_states.size(-1),)
+            presents.append(present)    # presents: [n_layers(12), 1, 12, 64, 64]
+        hidden_states = self.ln_f(hidden_states)    # hidden_states: [batch, L_in, d_embd]
+        output_shape = input_shape + (hidden_states.size(-1),)  # output_shape = [batch(1), L_in(64), d_embd(768)]
         return hidden_states.view(*output_shape), presents
 
 class GPT2LMHead(nn.Module):
@@ -201,8 +217,12 @@ class GPT2LMHeadModel(nn.Module):
         self.lm_head.set_embeddings_weights(self.transformer.wte.weight)
 
     def forward(self, input_ids, position_ids=None, token_type_ids=None, lm_labels=None, past=None):
-        hidden_states, presents = self.transformer(input_ids, position_ids, token_type_ids, past)
-        lm_logits = self.lm_head(hidden_states)
+
+        # input_ids: [batch, L_in],  
+        # embed(header="GPT2LMHeadModel")
+
+        hidden_states, presents = self.transformer(input_ids, position_ids, token_type_ids, past)   # hidden_states: [batch, L_in, d_embed]([1, 64, 768]),  presents: [12, 2, 1, 12, 64, 64]
+        lm_logits = self.lm_head(hidden_states) # [batch, L_in, n_dict]([1, 64, 50257])
         if lm_labels is not None:
             loss_fct = nn.CrossEntropyLoss(ignore_index=-1)
             loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), lm_labels.view(-1))

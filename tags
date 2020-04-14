@@ -1,0 +1,54 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Attention	GPT2/model.py	/^class Attention(nn.Module):$/;"	c
+Block	GPT2/model.py	/^class Block(nn.Module):$/;"	c
+Conv1D	GPT2/model.py	/^class Conv1D(nn.Module):$/;"	c
+Encoder	GPT2/encoder.py	/^class Encoder:$/;"	c
+GPT2Config	GPT2/config.py	/^class GPT2Config(object):$/;"	c
+GPT2LMHead	GPT2/model.py	/^class GPT2LMHead(nn.Module):$/;"	c
+GPT2LMHeadModel	GPT2/model.py	/^class GPT2LMHeadModel(nn.Module):$/;"	c
+GPT2Model	GPT2/model.py	/^class GPT2Model(nn.Module):$/;"	c
+LayerNorm	GPT2/model.py	/^class LayerNorm(nn.Module):$/;"	c
+MLP	GPT2/model.py	/^class MLP(nn.Module):$/;"	c
+__init__	GPT2/config.py	/^    def __init__($/;"	m	class:GPT2Config
+__init__	GPT2/encoder.py	/^    def __init__(self, encoder, bpe_merges, errors='replace'):$/;"	m	class:Encoder
+__init__	GPT2/model.py	/^    def __init__(self, config):$/;"	m	class:GPT2LMHeadModel
+__init__	GPT2/model.py	/^    def __init__(self, config):$/;"	m	class:GPT2Model
+__init__	GPT2/model.py	/^    def __init__(self, hidden_size, eps=1e-12):$/;"	m	class:LayerNorm
+__init__	GPT2/model.py	/^    def __init__(self, model_embeddings_weights, config):$/;"	m	class:GPT2LMHead
+__init__	GPT2/model.py	/^    def __init__(self, n_ctx, config, scale=False):$/;"	m	class:Block
+__init__	GPT2/model.py	/^    def __init__(self, n_state, config):  # in MLP: n_state=3072 (4 * n_embd)$/;"	m	class:MLP
+__init__	GPT2/model.py	/^    def __init__(self, nf, nx):$/;"	m	class:Conv1D
+__init__	GPT2/model.py	/^    def __init__(self, nx, n_ctx, config, scale=False):$/;"	m	class:Attention
+_attn	GPT2/model.py	/^    def _attn(self, q, k, v):$/;"	m	class:Attention
+bpe	GPT2/encoder.py	/^    def bpe(self, token):$/;"	m	class:Encoder
+bytes_to_unicode	GPT2/encoder.py	/^def bytes_to_unicode():$/;"	f
+decode	GPT2/encoder.py	/^    def decode(self, tokens):$/;"	m	class:Encoder
+encode	GPT2/encoder.py	/^    def encode(self, text):$/;"	m	class:Encoder
+forward	GPT2/model.py	/^    def forward(self, hidden_state):$/;"	m	class:GPT2LMHead
+forward	GPT2/model.py	/^    def forward(self, input_ids, position_ids=None, token_type_ids=None, lm_labels=None, past=None):$/;"	m	class:GPT2LMHeadModel
+forward	GPT2/model.py	/^    def forward(self, input_ids, position_ids=None, token_type_ids=None, past=None):$/;"	m	class:GPT2Model
+forward	GPT2/model.py	/^    def forward(self, x):$/;"	m	class:Conv1D
+forward	GPT2/model.py	/^    def forward(self, x):$/;"	m	class:LayerNorm
+forward	GPT2/model.py	/^    def forward(self, x):$/;"	m	class:MLP
+forward	GPT2/model.py	/^    def forward(self, x, layer_past=None):$/;"	m	class:Attention
+forward	GPT2/model.py	/^    def forward(self, x, layer_past=None):$/;"	m	class:Block
+gelu	GPT2/model.py	/^def gelu(x):$/;"	f
+get_encoder	GPT2/encoder.py	/^def get_encoder():$/;"	f
+get_pairs	GPT2/encoder.py	/^def get_pairs(word):$/;"	f
+load	GPT2/utils.py	/^    def load(module, prefix=""):$/;"	f	function:load_weight
+load_weight	GPT2/utils.py	/^def load_weight(model, state_dict):$/;"	f
+logger	GPT2/utils.py	/^logger = logging.getLogger(__name__)$/;"	v
+merge_heads	GPT2/model.py	/^    def merge_heads(self, x):$/;"	m	class:Attention
+sample_sequence	GPT2/sample.py	/^def sample_sequence(model, length, start_token=None, batch_size=None, context=None, temperature=1, top_k=0, device='cuda', sample=True):$/;"	f
+set_embeddings_weights	GPT2/model.py	/^    def set_embeddings_weights(self, model_embeddings_weights):$/;"	m	class:GPT2LMHead
+set_embeddings_weights	GPT2/model.py	/^    def set_embeddings_weights(self, model_embeddings_weights):$/;"	m	class:GPT2Model
+set_tied	GPT2/model.py	/^    def set_tied(self):$/;"	m	class:GPT2LMHeadModel
+split_heads	GPT2/model.py	/^    def split_heads(self, x, k=False):$/;"	m	class:Attention
+state_dict	main.py	/^        state_dict = torch.load('gpt2-pytorch_model.bin', map_location='cpu' if not torch.cuda.is_available() else None)$/;"	v
+text_generator	main.py	/^def text_generator(state_dict):$/;"	f
+top_k_logits	GPT2/sample.py	/^def top_k_logits(logits, k):$/;"	f
